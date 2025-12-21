@@ -51,7 +51,9 @@ ssh pi@<pi-ip>
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-venv python3-pip git \
-  chromium-browser xserver-xorg x11-xserver-utils xinit unclutter
+  xserver-xorg x11-xserver-utils xinit unclutter
+# Chromium (Pi OS: chromium-browser; fallback to chromium on Debian/Ubuntu)
+sudo apt install -y chromium-browser || sudo apt install -y chromium
 ```
 4) Clone repo on Pi:
 ```bash
@@ -157,6 +159,7 @@ Exec=/usr/bin/chromium-browser --noerrdialogs --kiosk http://localhost:8000 --in
 X-GNOME-Autostart-enabled=true
 EOF
 ```
+If your distro exposes `/usr/bin/chromium` instead, swap the path in the launcher/Exec lines.
 
 ---
 ## 5) Git Workflow (Pi + Dev)

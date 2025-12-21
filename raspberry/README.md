@@ -9,7 +9,7 @@ git init
 git add .
 git commit -m "initial commit"
 git branch -M main
-git remote add origin https://github.com/Yoruzaki/smart-lock.git
+git remote add origin https://github.com/Yoruzaki/ColiBox.git
 git push -u origin main
 ```
 Pull updates on Pi:
@@ -33,14 +33,16 @@ git push origin main
 ## System prep
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3 python3-venv python3-pip git chromium-browser xserver-xorg x11-xserver-utils xinit unclutter
+sudo apt install -y python3 python3-venv python3-pip git xserver-xorg x11-xserver-utils xinit unclutter
+# Chromium (Pi OS Lite usually has chromium-browser; otherwise try chromium)
+sudo apt install -y chromium-browser || sudo apt install -y chromium
 ```
 
 ## Python setup
 ```bash
 mkdir -p ~/smart-locker
 cd ~/smart-locker
-git clone https://github.com/Yoruzaki/smart-lock.git .   # or copy the repo here
+git clone https://github.com/Yoruzaki/ColiBox.git .   # or copy the repo here
 cd raspberry
 python3 -m venv .venv
 source .venv/bin/activate
@@ -82,6 +84,7 @@ Exec=/usr/bin/chromium-browser --noerrdialogs --kiosk http://localhost:8000 --in
 X-GNOME-Autostart-enabled=true
 EOF
 ```
+If your system provides `/usr/bin/chromium` (not `chromium-browser`), adjust the Exec line accordingly.
 Hide mouse cursor:
 ```bash
 unclutter -idle 0 &
