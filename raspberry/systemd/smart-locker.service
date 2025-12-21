@@ -1,0 +1,16 @@
+[Unit]
+Description=Smart Locker Kiosk Flask App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/smart-locker/raspberry
+Environment="SERVER_BASE_URL=http://localhost:5000"
+ExecStart=/usr/bin/python3 /home/pi/smart-locker/raspberry/app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,57 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+  color: #222;
+}
+header {
+  background: #0f766e;
+  color: #fff;
+  padding: 1rem;
+}
+main {
+  padding: 1rem 2rem;
+}
+section {
+  margin-bottom: 1.5rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.status {
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0.5rem;
+}
+.status.closed { color: #16a34a; }
+.status.deposit_open, .status.withdraw_open { color: #d97706; }
+button {
+  background: #0f766e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+th, td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: left;
+}
+th { background: #f0fdfa; }
+

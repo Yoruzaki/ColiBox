@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="screen" id="home-screen">
+  <h1>Smart Locker</h1>
+  <div class="actions">
+    <button onclick="showFlow('deposit')">Deposit</button>
+    <button onclick="showFlow('withdraw')">Withdraw</button>
+  </div>
+</section>
+
+<section class="screen hidden" id="deposit-screen">
+  <button class="back" onclick="goHome()">← Back</button>
+  <h2>Deposit</h2>
+  <label>Tracking Code
+    <input id="deposit-tracking" placeholder="Enter tracking code">
+  </label>
+  <label>Locker ID (1-15)
+    <input id="deposit-locker" type="number" min="1" max="15">
+  </label>
+  <button onclick="openDeposit()">Open Locker</button>
+  <div id="deposit-result" class="result"></div>
+  <div class="hidden" id="deposit-close">
+    <p>Close the locker, then press confirm.</p>
+    <button onclick="closeDeposit()">Confirm Close</button>
+  </div>
+</section>
+
+<section class="screen hidden" id="withdraw-screen">
+  <button class="back" onclick="goHome()">← Back</button>
+  <h2>Withdraw</h2>
+  <label>Password
+    <input id="withdraw-password" placeholder="Enter password">
+  </label>
+  <label>Locker ID (1-15)
+    <input id="withdraw-locker" type="number" min="1" max="15">
+  </label>
+  <button onclick="openWithdraw()">Open Locker</button>
+  <div id="withdraw-result" class="result"></div>
+  <div class="hidden" id="withdraw-close">
+    <p>Close the locker, then press confirm.</p>
+    <button onclick="closeWithdraw()">Confirm Close</button>
+  </div>
+</section>
+{% endblock %}
+
