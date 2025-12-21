@@ -49,7 +49,7 @@ def seed_lockers(db):
     if existing >= LOCKER_COUNT:
         return
     db.executemany(
-        "INSERT OR IGNORE INTO lockers (number, status) VALUES (?, 'closed')",
+        "INSERT OR IGNORE INTO lockers (number, status) VALUES (?, ?)",
         [(i, "closed") for i in range(1, LOCKER_COUNT + 1)],
     )
 
