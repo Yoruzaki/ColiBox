@@ -34,8 +34,8 @@ git push origin main
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-venv python3-pip git xserver-xorg x11-xserver-utils xinit unclutter
-# Chromium (Pi OS Lite usually has chromium-browser; otherwise try chromium)
-sudo apt install -y chromium-browser || sudo apt install -y chromium
+# Chromium (Bookworm): use 'chromium'
+sudo apt install -y chromium
 ```
 
 ## Python setup
@@ -70,7 +70,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable smart-locker
 sudo systemctl start smart-locker
 ```
-Service runs `/usr/bin/python3 /home/pi/smart-locker/raspberry/app.py` and restarts on crash.
+Service runs `/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py` and restarts on crash.
 
 ## Chromium kiosk on boot (optional)
 Create `~/.config/autostart/kiosk.desktop`:
