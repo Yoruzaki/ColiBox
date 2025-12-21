@@ -101,7 +101,52 @@ sudo systemctl restart smart-locker
 ```
 
 ### Chromium kiosk mode (optional GUI autostart)
-Create autostart entry:
+If using Raspberry Pi OS Lite (no desktop), install X components (already listed) and auto-start Chromium in kiosk after login:
+
+1) Ensure `pi` autologin on tty1 (Pi OS Lite default). If not:
+```bash
+sudo raspi-config  # System Options -> Boot / Auto Login -> Console Autologin
+```
+
+2) Create a kiosk launcher:
+```bash
+cat > ~/start-kiosk.sh <<'EOF'
+#!/usr/bin/env bash
+export DISPLAY=:0
+export XAUTHORITY=/home/pi/.Xauthority
+unclutter -idle 0 &
+/usr/bin/chromium-browser \
+  --noerrdialogs \
+  --kiosk http://localhost:8000 \
+  --incognito \
+  --disable-translate \
+  --overscroll-history-navigation=0
+EOF
+chmod +x ~/start-kiosk.sh
+```
+
+3) Auto-start X + Chromium on login:
+```bash
+cat >> ~/.bash_profile <<'EOF'
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+  startx /usr/bin/env DISPLAY=:0 /usr/bin/openbox-session &
+  sleep 3
+  /home/pi/start-kiosk.sh
+fi
+EOF
+```
+
+4) Disable screen blanking:
+```bash
+cat > ~/.xinitrc <<'EOF'
+xset s off
+xset -dpms
+xset s noblank
+openbox-session &
+EOF
+```
+
+If using the full desktop variant, you can instead use LXDE autostart:
 ```bash
 mkdir -p ~/.config/autostart
 cat > ~/.config/autostart/kiosk.desktop <<'EOF'
@@ -111,10 +156,6 @@ Name=Locker Kiosk
 Exec=/usr/bin/chromium-browser --noerrdialogs --kiosk http://localhost:8000 --incognito --disable-translate --overscroll-history-navigation=0
 X-GNOME-Autostart-enabled=true
 EOF
-```
-Hide cursor:
-```bash
-unclutter -idle 0 &
 ```
 
 ---
