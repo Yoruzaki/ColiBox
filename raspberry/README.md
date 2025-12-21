@@ -34,7 +34,7 @@ git push origin main
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-venv python3-pip git xserver-xorg x11-xserver-utils xinit unclutter
-# Chromium (Bookworm): use 'chromium'
+# Chromium (Bookworm): use 'chromium' (no '-browser' suffix)
 sudo apt install -y chromium
 ```
 
@@ -70,7 +70,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable smart-locker
 sudo systemctl start smart-locker
 ```
-Service runs `/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py` and restarts on crash.
+Service runs `/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py` and restarts on crash. Set `SERVER_BASE_URL` and `SERIAL_PORT` in the unit if needed.
 
 ## Chromium kiosk on boot (optional)
 Create `~/.config/autostart/kiosk.desktop`:
@@ -80,14 +80,22 @@ cat > ~/.config/autostart/kiosk.desktop <<'EOF'
 [Desktop Entry]
 Type=Application
 Name=Locker Kiosk
-Exec=/usr/bin/chromium-browser --noerrdialogs --kiosk http://localhost:8000 --incognito --disable-translate --overscroll-history-navigation=0
+Exec=/usr/bin/chromium --noerrdialogs --kiosk http://localhost:8000 --incognito --disable-translate --overscroll-history-navigation=0
 X-GNOME-Autostart-enabled=true
 EOF
 ```
-If your system provides `/usr/bin/chromium` (not `chromium-browser`), adjust the Exec line accordingly.
+If your system exposes a different path, run `which chromium` and use that path in Exec.
 Hide mouse cursor:
 ```bash
 unclutter -idle 0 &
+```
+
+### Manual kiosk start (no desktop)
+```bash
+export DISPLAY=:0
+startx &
+sleep 3
+/usr/bin/chromium --noerrdialogs --kiosk http://localhost:8000 --incognito --disable-translate --overscroll-history-navigation=0
 ```
 
 ## Updating from GitHub
