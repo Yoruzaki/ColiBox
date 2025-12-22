@@ -1,5 +1,7 @@
 let depositState = null;
 let withdrawState = null;
+let selectedDepositLocker = null;
+let selectedWithdrawLocker = null;
 
 function showLoading(show = true) {
   const overlay = document.getElementById("loading-overlay");
@@ -8,6 +10,17 @@ function showLoading(show = true) {
   } else {
     overlay.classList.add("hidden");
   }
+}
+
+function showToast(message, type = "info") {
+  const toast = document.getElementById("message-toast");
+  toast.textContent = message;
+  toast.className = `message-toast ${type}`;
+  toast.classList.remove("hidden");
+  
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3000);
 }
 
 function showFlow(flow) {
@@ -25,6 +38,8 @@ function showFlow(flow) {
 function goHome() {
   depositState = null;
   withdrawState = null;
+  selectedDepositLocker = null;
+  selectedWithdrawLocker = null;
   
   const currentScreen = document.querySelector(".screen:not(.hidden)");
   currentScreen.style.animation = "fadeOut 0.3s ease-out";
@@ -40,33 +55,52 @@ function goHome() {
     document.getElementById("deposit-locker").value = "";
     document.getElementById("withdraw-password").value = "";
     document.getElementById("withdraw-locker").value = "";
-    document.getElementById("deposit-result").textContent = "";
-    document.getElementById("withdraw-result").textContent = "";
+    document.querySelectorAll(".locker-btn").forEach(btn => btn.classList.remove("selected"));
     document.getElementById("deposit-close").classList.add("hidden");
     document.getElementById("withdraw-close").classList.add("hidden");
   }, 300);
 }
 
+// Setup locker grid click handlers
+document.addEventListener("DOMContentLoaded", () => {
+  // Deposit locker grid
+  document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedDepositLocker = parseInt(btn.dataset.locker);
+      document.getElementById("deposit-locker").value = selectedDepositLocker;
+    });
+  });
+  
+  // Withdraw locker grid
+  document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedWithdrawLocker = parseInt(btn.dataset.locker);
+      document.getElementById("withdraw-locker").value = selectedWithdrawLocker;
+    });
+  });
+});
+
 async function openDeposit() {
   const trackingCode = document.getElementById("deposit-tracking").value.trim();
-  const lockerId = parseInt(document.getElementById("deposit-locker").value, 10);
-  const result = document.getElementById("deposit-result");
+  const lockerId = selectedDepositLocker;
   
   if (!trackingCode) {
-    showMessage(result, "⚠️ Please enter a tracking code", "warning");
+    showToast("Entrez le code de suivi", "warning");
     return;
   }
   
   if (!lockerId || lockerId < 1 || lockerId > 15) {
-    showMessage(result, "⚠️ Please select a valid locker", "warning");
+    showToast("Sélectionnez un casier", "warning");
     return;
   }
   
   showLoading(true);
-  result.textContent = "🔄 Opening locker...";
-  result.style.background = "rgba(99, 102, 241, 0.1)";
-  result.style.border = "1px solid rgba(99, 102, 241, 0.3)";
-  result.style.color = "#818cf8";
   
   try {
     const resp = await fetch("/api/deposit/open", {
@@ -79,27 +113,22 @@ async function openDeposit() {
     showLoading(false);
     
     if (resp.ok) {
-      showMessage(result, `✅ ${data.message || "Locker opened successfully!"}`, "success");
+      showToast("Casier ouvert", "success");
       depositState = { lockerId, closetId: data.closetId, trackingCode };
       document.getElementById("deposit-close").classList.remove("hidden");
     } else {
-      showMessage(result, `❌ ${data.message || "Failed to open locker"}`, "error");
+      showToast(data.message || "Erreur", "error");
     }
   } catch (error) {
     showLoading(false);
-    showMessage(result, `❌ Connection error: ${error.message}`, "error");
+    showToast("Erreur de connexion", "error");
   }
 }
 
 async function closeDeposit() {
   if (!depositState) return;
   
-  const result = document.getElementById("deposit-result");
   showLoading(true);
-  result.textContent = "🔄 Verifying and closing locker...";
-  result.style.background = "rgba(99, 102, 241, 0.1)";
-  result.style.border = "1px solid rgba(99, 102, 241, 0.3)";
-  result.style.color = "#818cf8";
   
   try {
     const resp = await fetch("/api/deposit/close", {
@@ -112,46 +141,40 @@ async function closeDeposit() {
     showLoading(false);
     
     if (resp.ok) {
-      let message = `✅ ${data.message || "Deposit complete!"}`;
       if (data.password) {
-        message += `\n\n🔑 Your password: ${data.password}\n\n⚠️ Please save this password to retrieve your package!`;
+        showToast(`Mot de passe: ${data.password}`, "success");
+      } else {
+        showToast("Dépôt terminé", "success");
       }
-      showMessage(result, message, "success");
       document.getElementById("deposit-close").classList.add("hidden");
       
-      // Auto-return to home after success
       setTimeout(() => {
         goHome();
-      }, 5000);
+      }, 4000);
     } else {
-      showMessage(result, `❌ ${data.message || "Failed to close locker"}`, "error");
+      showToast(data.message || "Erreur", "error");
     }
   } catch (error) {
     showLoading(false);
-    showMessage(result, `❌ Connection error: ${error.message}`, "error");
+    showToast("Erreur de connexion", "error");
   }
 }
 
 async function openWithdraw() {
   const password = document.getElementById("withdraw-password").value.trim();
-  const lockerId = parseInt(document.getElementById("withdraw-locker").value, 10);
-  const result = document.getElementById("withdraw-result");
+  const lockerId = selectedWithdrawLocker;
   
   if (!password) {
-    showMessage(result, "⚠️ Please enter your password", "warning");
+    showToast("Entrez le mot de passe", "warning");
     return;
   }
   
   if (!lockerId || lockerId < 1 || lockerId > 15) {
-    showMessage(result, "⚠️ Please select a valid locker", "warning");
+    showToast("Sélectionnez un casier", "warning");
     return;
   }
   
   showLoading(true);
-  result.textContent = "🔄 Opening locker...";
-  result.style.background = "rgba(99, 102, 241, 0.1)";
-  result.style.border = "1px solid rgba(99, 102, 241, 0.3)";
-  result.style.color = "#818cf8";
   
   try {
     const resp = await fetch("/api/withdraw/open", {
@@ -164,27 +187,22 @@ async function openWithdraw() {
     showLoading(false);
     
     if (resp.ok) {
-      showMessage(result, `✅ ${data.message || "Locker opened successfully!"}`, "success");
+      showToast("Casier ouvert", "success");
       withdrawState = { lockerId, closetId: data.closetId };
       document.getElementById("withdraw-close").classList.remove("hidden");
     } else {
-      showMessage(result, `❌ ${data.message || "Invalid password or locker"}`, "error");
+      showToast(data.message || "Mot de passe invalide", "error");
     }
   } catch (error) {
     showLoading(false);
-    showMessage(result, `❌ Connection error: ${error.message}`, "error");
+    showToast("Erreur de connexion", "error");
   }
 }
 
 async function closeWithdraw() {
   if (!withdrawState) return;
   
-  const result = document.getElementById("withdraw-result");
   showLoading(true);
-  result.textContent = "🔄 Closing locker...";
-  result.style.background = "rgba(99, 102, 241, 0.1)";
-  result.style.border = "1px solid rgba(99, 102, 241, 0.3)";
-  result.style.color = "#818cf8";
   
   try {
     const resp = await fetch("/api/withdraw/close", {
@@ -197,50 +215,22 @@ async function closeWithdraw() {
     showLoading(false);
     
     if (resp.ok) {
-      showMessage(result, `✅ ${data.message || "Withdrawal complete!"}`, "success");
+      showToast("Retrait terminé", "success");
       document.getElementById("withdraw-close").classList.add("hidden");
       
-      // Auto-return to home after success
       setTimeout(() => {
         goHome();
       }, 3000);
     } else {
-      showMessage(result, `❌ ${data.message || "Failed to close locker"}`, "error");
+      showToast(data.message || "Erreur", "error");
     }
   } catch (error) {
     showLoading(false);
-    showMessage(result, `❌ Connection error: ${error.message}`, "error");
+    showToast("Erreur de connexion", "error");
   }
 }
 
-function showMessage(element, message, type = "info") {
-  element.textContent = message;
-  element.style.whiteSpace = "pre-line";
-  
-  switch (type) {
-    case "success":
-      element.style.background = "rgba(16, 185, 129, 0.1)";
-      element.style.border = "1px solid rgba(16, 185, 129, 0.3)";
-      element.style.color = "#10b981";
-      break;
-    case "error":
-      element.style.background = "rgba(239, 68, 68, 0.1)";
-      element.style.border = "1px solid rgba(239, 68, 68, 0.3)";
-      element.style.color = "#ef4444";
-      break;
-    case "warning":
-      element.style.background = "rgba(245, 158, 11, 0.1)";
-      element.style.border = "1px solid rgba(245, 158, 11, 0.3)";
-      element.style.color = "#f59e0b";
-      break;
-    default:
-      element.style.background = "rgba(99, 102, 241, 0.1)";
-      element.style.border = "1px solid rgba(99, 102, 241, 0.3)";
-      element.style.color = "#818cf8";
-  }
-}
-
-// Add keyboard shortcuts
+// Keyboard shortcuts
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     const homeScreen = document.getElementById("home-screen");

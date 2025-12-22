@@ -3,132 +3,127 @@
 <section class="screen fade-in" id="home-screen">
   <div class="logo-container">
     <div class="logo">ColiGoo</div>
-    <div class="tagline">Smart Locker System</div>
   </div>
-  <h1>Welcome</h1>
-  <p class="subtitle">Select an operation to continue</p>
+  <h1>Bienvenue</h1>
+  <p class="subtitle">Sélectionnez une opération</p>
   <div class="actions">
     <button class="btn-primary" onclick="showFlow('deposit')">
-      <span class="btn-icon">📦</span>
-      <span class="btn-text">Deposit Package</span>
+      <span class="btn-text">Déposer un colis</span>
     </button>
     <button class="btn-primary" onclick="showFlow('withdraw')">
-      <span class="btn-icon">🔓</span>
-      <span class="btn-text">Withdraw Package</span>
+      <span class="btn-text">Retirer un colis</span>
     </button>
   </div>
 </section>
 
 <section class="screen hidden" id="deposit-screen">
-  <button class="back" onclick="goHome()">← Back</button>
+  <button class="back" onclick="goHome()">← Retour</button>
   <div class="screen-header">
-    <h2>📦 Deposit Package</h2>
-    <p class="subtitle">Store your package securely</p>
+    <h2>Déposer un colis</h2>
+    <p class="subtitle">Stockez votre colis en toute sécurité</p>
   </div>
   
   <div class="form-group">
     <label for="deposit-tracking">
-      <span class="label-text">Tracking Code</span>
+      <span class="label-text">Code de suivi</span>
       <span class="label-required">*</span>
     </label>
-    <input id="deposit-tracking" class="input-field" placeholder="Enter tracking code" autocomplete="off">
+    <input id="deposit-tracking" class="input-field" placeholder="Entrez le code de suivi" autocomplete="off">
   </div>
   
   <div class="form-group">
-    <label for="deposit-locker">
-      <span class="label-text">Select Locker</span>
+    <label>
+      <span class="label-text">Sélectionnez un casier</span>
       <span class="label-required">*</span>
     </label>
-    <select id="deposit-locker" class="select-field">
-      <option value="">Choose a locker...</option>
-      <option value="1">Locker 1</option>
-      <option value="2">Locker 2</option>
-      <option value="3">Locker 3</option>
-      <option value="4">Locker 4</option>
-      <option value="5">Locker 5</option>
-      <option value="6">Locker 6</option>
-      <option value="7">Locker 7</option>
-      <option value="8">Locker 8</option>
-      <option value="9">Locker 9</option>
-      <option value="10">Locker 10</option>
-      <option value="11">Locker 11</option>
-      <option value="12">Locker 12</option>
-      <option value="13">Locker 13</option>
-      <option value="14">Locker 14</option>
-      <option value="15">Locker 15</option>
-    </select>
+    <div class="locker-grid" id="deposit-locker-grid">
+      <button class="locker-btn" data-locker="1">1</button>
+      <button class="locker-btn" data-locker="2">2</button>
+      <button class="locker-btn" data-locker="3">3</button>
+      <button class="locker-btn" data-locker="4">4</button>
+      <button class="locker-btn" data-locker="5">5</button>
+      <button class="locker-btn" data-locker="6">6</button>
+      <button class="locker-btn" data-locker="7">7</button>
+      <button class="locker-btn" data-locker="8">8</button>
+      <button class="locker-btn" data-locker="9">9</button>
+      <button class="locker-btn" data-locker="10">10</button>
+      <button class="locker-btn" data-locker="11">11</button>
+      <button class="locker-btn" data-locker="12">12</button>
+      <button class="locker-btn" data-locker="13">13</button>
+      <button class="locker-btn" data-locker="14">14</button>
+      <button class="locker-btn" data-locker="15">15</button>
+    </div>
+    <input type="hidden" id="deposit-locker" value="">
   </div>
   
   <button class="btn-action" onclick="openDeposit()">
-    <span class="btn-text">Open Locker</span>
+    <span class="btn-text">Ouvrir le casier</span>
   </button>
-  
-  <div id="deposit-result" class="result"></div>
   
   <div class="hidden close-section" id="deposit-close">
     <div class="info-box">
-      <p class="info-text">📍 Please place your package inside and close the door securely.</p>
-      <button class="btn-confirm" onclick="closeDeposit()">Confirm & Close</button>
+      <p class="info-text">Placez votre colis à l'intérieur et fermez la porte</p>
+      <button class="btn-confirm" onclick="closeDeposit()">Confirmer</button>
     </div>
   </div>
 </section>
 
 <section class="screen hidden" id="withdraw-screen">
-  <button class="back" onclick="goHome()">← Back</button>
+  <button class="back" onclick="goHome()">← Retour</button>
   <div class="screen-header">
-    <h2>🔓 Withdraw Package</h2>
-    <p class="subtitle">Retrieve your package</p>
+    <h2>Retirer un colis</h2>
+    <p class="subtitle">Récupérez votre colis</p>
   </div>
   
   <div class="form-group">
     <label for="withdraw-password">
-      <span class="label-text">Password</span>
+      <span class="label-text">Mot de passe</span>
       <span class="label-required">*</span>
     </label>
-    <input id="withdraw-password" class="input-field" type="password" placeholder="Enter your password" autocomplete="off">
+    <input id="withdraw-password" class="input-field" type="password" placeholder="Entrez votre mot de passe" autocomplete="off">
   </div>
   
   <div class="form-group">
-    <label for="withdraw-locker">
-      <span class="label-text">Select Locker</span>
+    <label>
+      <span class="label-text">Sélectionnez un casier</span>
       <span class="label-required">*</span>
     </label>
-    <select id="withdraw-locker" class="select-field">
-      <option value="">Choose a locker...</option>
-      <option value="1">Locker 1</option>
-      <option value="2">Locker 2</option>
-      <option value="3">Locker 3</option>
-      <option value="4">Locker 4</option>
-      <option value="5">Locker 5</option>
-      <option value="6">Locker 6</option>
-      <option value="7">Locker 7</option>
-      <option value="8">Locker 8</option>
-      <option value="9">Locker 9</option>
-      <option value="10">Locker 10</option>
-      <option value="11">Locker 11</option>
-      <option value="12">Locker 12</option>
-      <option value="13">Locker 13</option>
-      <option value="14">Locker 14</option>
-      <option value="15">Locker 15</option>
-    </select>
+    <div class="locker-grid" id="withdraw-locker-grid">
+      <button class="locker-btn" data-locker="1">1</button>
+      <button class="locker-btn" data-locker="2">2</button>
+      <button class="locker-btn" data-locker="3">3</button>
+      <button class="locker-btn" data-locker="4">4</button>
+      <button class="locker-btn" data-locker="5">5</button>
+      <button class="locker-btn" data-locker="6">6</button>
+      <button class="locker-btn" data-locker="7">7</button>
+      <button class="locker-btn" data-locker="8">8</button>
+      <button class="locker-btn" data-locker="9">9</button>
+      <button class="locker-btn" data-locker="10">10</button>
+      <button class="locker-btn" data-locker="11">11</button>
+      <button class="locker-btn" data-locker="12">12</button>
+      <button class="locker-btn" data-locker="13">13</button>
+      <button class="locker-btn" data-locker="14">14</button>
+      <button class="locker-btn" data-locker="15">15</button>
+    </div>
+    <input type="hidden" id="withdraw-locker" value="">
   </div>
   
   <button class="btn-action" onclick="openWithdraw()">
-    <span class="btn-text">Open Locker</span>
+    <span class="btn-text">Ouvrir le casier</span>
   </button>
-  
-  <div id="withdraw-result" class="result"></div>
   
   <div class="hidden close-section" id="withdraw-close">
     <div class="info-box">
-      <p class="info-text">📍 Please take your package and close the door securely.</p>
-      <button class="btn-confirm" onclick="closeWithdraw()">Confirm & Close</button>
+      <p class="info-text">Retirez votre colis et fermez la porte</p>
+      <button class="btn-confirm" onclick="closeWithdraw()">Confirmer</button>
     </div>
   </div>
 </section>
 
+<div id="message-toast" class="message-toast hidden"></div>
+
 <div id="loading-overlay" class="loading-overlay hidden">
   <div class="spinner"></div>
-  <p class="loading-text">Processing...</p>
+  <p class="loading-text">Traitement en cours...</p>
 </div>
 {% endblock %}
