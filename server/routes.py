@@ -49,17 +49,6 @@ def reset_locker(locker_id):
     return redirect(url_for("routes.index"))
 
 
-@bp.route("/api/lockers/occupied", methods=["GET"])
-def get_occupied_lockers():
-    """Return list of locker IDs that currently have orders"""
-    db = _get_db()
-    lockers = db.execute(
-        "SELECT DISTINCT locker_id FROM orders WHERE status IN ('awaiting_close', 'closed')"
-    ).fetchall()
-    occupied = [row["locker_id"] for row in lockers]
-    return jsonify({"occupied": occupied})
-
-
 @bp.route("/api/deposit/open", methods=["POST"])
 def open_deposit():
     payload = request.get_json(force=True)

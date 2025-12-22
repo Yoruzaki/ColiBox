@@ -25,42 +25,6 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-@app.route("/api/lockers/status", methods=["GET"])
-def get_lockers_status():
-    """Get real-time status of all lockers from sensors and server"""
-    try:
-        # Get physical status from Arduino sensors
-        sensor_statuses = serial_ctrl.get_all_statuses()
-        
-        # Get occupation status from server
-        occupied_lockers, status_code = api_client.get_occupied_lockers()
-        occupied = set(occupied_lockers) if status_code == 200 else set()
-        
-        # Combine both: sensor status + occupation
-        lockers = []
-        for locker_id in range(1, 16):
-            sensor_status = sensor_statuses.get(locker_id, "closed")
-            is_occupied = locker_id in occupied
-            
-            # Determine overall status
-            if sensor_status == "open":
-                status = "open"
-            elif is_occupied:
-                status = "occupied"
-            else:
-                status = "available"
-            
-            lockers.append({
-                "id": locker_id,
-                "status": status,
-                "sensor": sensor_status
-            })
-        
-        return jsonify({"lockers": lockers})
-    except Exception as exc:
-        return jsonify({"message": str(exc)}), 500
-
-
 def _validate_locker(locker_id: int):
     if locker_id == 16:
         return False, ("Locker 16 is reserved", 400)

@@ -20,17 +20,6 @@ class ApiClient:
     def close_withdraw(self, locker_id: int, closet_id: int):
         return self._post("/api/withdraw/close", {"lockerId": locker_id, "closetId": closet_id})
 
-    def get_occupied_lockers(self):
-        """Get list of occupied locker IDs from server"""
-        try:
-            resp = requests.get(f"{self.base_url}/api/lockers/occupied", timeout=3)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("occupied", []), resp.status_code
-            return [], resp.status_code
-        except Exception:  # pragma: no cover
-            return [], 503
-    
     def _post(self, path: str, body: dict):
         try:
             resp = requests.post(f"{self.base_url}{path}", json=body, timeout=5)
