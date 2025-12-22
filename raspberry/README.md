@@ -72,19 +72,6 @@ sudo systemctl start smart-locker
 ```
 Service runs `/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py` and restarts on crash. Set `SERVER_BASE_URL` and `SERIAL_PORT` in the unit if needed.
 
-## On-screen keyboard for touchscreen
-Install and configure Onboard keyboard (auto-shows when clicking inputs):
-```bash
-cd ~/smart-locker/ColiBox/raspberry
-chmod +x setup-onboard.sh
-./setup-onboard.sh
-```
-Then restart the kiosk service:
-```bash
-sudo systemctl restart kiosk-browser
-```
-The keyboard will automatically appear when you tap on text inputs and hide when not needed.
-
 ## Chromium kiosk on boot (desktop session)
 Create `~/.config/autostart/kiosk.desktop`:
 ```bash

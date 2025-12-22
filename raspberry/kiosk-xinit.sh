@@ -11,20 +11,12 @@ export XAUTHORITY=/home/pi/.Xauthority
 # Hide mouse cursor
 unclutter -idle 0 &
 
-# Start on-screen keyboard (auto-show on input focus)
-onboard --size=400x200 &
-
 exec /usr/bin/chromium \
   --noerrdialogs \
   --kiosk "${KIOSK_URL}" \
   --incognito \
   --disable-translate \
-  --disable-features=Translate \
-  --disable-features=TranslateUI \
-  --disable-infobars \
   --overscroll-history-navigation=0 \
   --check-for-update-interval=31536000 \
-  --start-fullscreen \
-  --touch-events=enabled \
-  --disable-pinch
+  --start-fullscreen
 
