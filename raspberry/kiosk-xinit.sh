@@ -11,8 +11,8 @@ export XAUTHORITY=/home/pi/.Xauthority
 # Hide mouse cursor
 unclutter -idle 0 &
 
-# Start on-screen keyboard (hidden by default, shows when input is focused)
-matchbox-keyboard -s 50 &
+# Start on-screen keyboard (auto-show on input focus)
+onboard --size=400x200 &
 
 exec /usr/bin/chromium \
   --noerrdialogs \
@@ -27,3 +27,4 @@ exec /usr/bin/chromium \
   --start-fullscreen \
   --touch-events=enabled \
   --disable-pinch
+
