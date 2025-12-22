@@ -72,7 +72,7 @@ sudo systemctl start smart-locker
 ```
 Service runs `/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py` and restarts on crash. Set `SERVER_BASE_URL` and `SERIAL_PORT` in the unit if needed.
 
-## Chromium kiosk on boot (optional)
+## Chromium kiosk on boot (desktop session)
 Create `~/.config/autostart/kiosk.desktop`:
 ```bash
 mkdir -p ~/.config/autostart
@@ -97,6 +97,28 @@ startx &
 sleep 3
 /usr/bin/chromium --noerrdialogs --kiosk http://localhost:8000 --incognito --disable-translate --overscroll-history-navigation=0
 ```
+
+## Pure kiosk mode (no desktop shown, via systemd + xinit)
+1) Packages (already above): `xserver-xorg x11-xserver-utils xinit unclutter chromium`
+2) Install service + launcher:
+```bash
+cd /home/pi/smart-locker/ColiBox/raspberry
+chmod +x kiosk-xinit.sh
+sudo cp systemd/kiosk-browser.service /etc/systemd/system/kiosk-browser.service
+```
+3) Configure URLs if needed:
+```bash
+# Edit the unit to point KIOSK_URL at your Pi's Flask UI (default http://localhost:8000)
+sudo nano /etc/systemd/system/kiosk-browser.service
+```
+4) Enable and start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable kiosk-browser
+sudo systemctl start kiosk-browser
+sudo systemctl status kiosk-browser
+```
+This launches X directly to Chromium in kiosk mode on tty1, without showing a desktop environment.
 
 ## Updating from GitHub
 ```bash

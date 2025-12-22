@@ -1,0 +1,15 @@
+[Unit]
+Description=Chromium Kiosk (no desktop)
+After=network-online.target smart-locker.service
+Wants=network-online.target smart-locker.service
+
+[Service]
+User=pi
+Environment="KIOSK_URL=http://localhost:8000"
+ExecStart=/usr/bin/xinit /home/pi/smart-locker/ColiBox/raspberry/kiosk-xinit.sh -- :0 vt1 -nolisten tcp
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
