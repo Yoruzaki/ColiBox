@@ -2,8 +2,8 @@ let depositState = null;
 let withdrawState = null;
 let selectedDepositLocker = null;
 let selectedWithdrawLocker = null;
+let statusPollingInterval = null;
 let lockerStatuses = {};
-let statusCheckInterval = null;
 
 function showLoading(show = true) {
   const overlay = document.getElementById("loading-overlay");
@@ -25,58 +25,6 @@ function showToast(message, type = "info") {
   }, 3000);
 }
 
-// Check locker statuses from server
-async function checkLockerStatuses() {
-  try {
-    const resp = await fetch("/api/lockers/status");
-    const data = await resp.json();
-    
-    if (resp.ok && data.lockers) {
-      lockerStatuses = data.lockers;
-      updateLockerGrid();
-    }
-  } catch (error) {
-    // Silently fail - don't show errors for background polling
-    console.error("Status check failed:", error);
-  }
-}
-
-// Update the visual status of locker buttons
-function updateLockerGrid() {
-  document.querySelectorAll(".locker-btn").forEach(btn => {
-    const lockerId = btn.dataset.locker;
-    const status = lockerStatuses[lockerId];
-    
-    if (status && status.occupied) {
-      btn.classList.add("occupied");
-      btn.disabled = true;
-    } else {
-      btn.classList.remove("occupied");
-      btn.disabled = false;
-    }
-  });
-}
-
-// Start polling locker statuses every 6 seconds
-function startStatusPolling() {
-  // Check immediately
-  checkLockerStatuses();
-  
-  // Then check every 6 seconds
-  if (statusCheckInterval) {
-    clearInterval(statusCheckInterval);
-  }
-  statusCheckInterval = setInterval(checkLockerStatuses, 6000);
-}
-
-// Stop polling when not needed
-function stopStatusPolling() {
-  if (statusCheckInterval) {
-    clearInterval(statusCheckInterval);
-    statusCheckInterval = null;
-  }
-}
-
 function showFlow(flow) {
   const homeScreen = document.getElementById("home-screen");
   const flowScreen = document.getElementById(`${flow}-screen`);
@@ -87,8 +35,8 @@ function showFlow(flow) {
     flowScreen.classList.remove("hidden");
     flowScreen.style.animation = "fadeIn 0.4s ease-out";
     
-    // Start polling when entering deposit/withdraw screens
-    startStatusPolling();
+    // Refresh status when entering a flow
+    fetchLockerStatus();
   }, 300);
 }
 
@@ -97,9 +45,6 @@ function goHome() {
   withdrawState = null;
   selectedDepositLocker = null;
   selectedWithdrawLocker = null;
-  
-  // Stop polling when going home
-  stopStatusPolling();
   
   const currentScreen = document.querySelector(".screen:not(.hidden)");
   currentScreen.style.animation = "fadeOut 0.3s ease-out";
@@ -115,14 +60,78 @@ function goHome() {
     document.getElementById("deposit-locker").value = "";
     document.getElementById("withdraw-password").value = "";
     document.getElementById("withdraw-locker").value = "";
-    document.querySelectorAll(".locker-btn").forEach(btn => {
-      btn.classList.remove("selected");
-      btn.classList.remove("occupied");
-      btn.disabled = false;
-    });
+    document.querySelectorAll(".locker-btn").forEach(btn => btn.classList.remove("selected"));
     document.getElementById("deposit-close").classList.add("hidden");
     document.getElementById("withdraw-close").classList.add("hidden");
   }, 300);
+}
+
+// Fetch locker statuses from server + sensors
+async function fetchLockerStatus() {
+  try {
+    const resp = await fetch("/api/lockers/status");
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.lockers) {
+        lockerStatuses = {};
+        data.lockers.forEach(locker => {
+          lockerStatuses[locker.id] = locker.status;
+        });
+        updateLockerGrid();
+        
+        // Auto-detect locker closure during deposit/withdraw
+        if (depositState && lockerStatuses[depositState.lockerId] === "occupied") {
+          // Locker was closed with package, auto-trigger close
+          autoCloseDeposit();
+        }
+        if (withdrawState && lockerStatuses[withdrawState.lockerId] === "available") {
+          // Locker was closed after withdrawal, auto-trigger close
+          autoCloseWithdraw();
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching locker status:", error);
+  }
+}
+
+// Update grid visual states
+function updateLockerGrid() {
+  document.querySelectorAll(".locker-btn").forEach(btn => {
+    const lockerId = parseInt(btn.dataset.locker);
+    const status = lockerStatuses[lockerId] || "available";
+    
+    // Remove all status classes
+    btn.classList.remove("status-available", "status-occupied", "status-open");
+    
+    // Add current status class
+    btn.classList.add(`status-${status}`);
+    
+    // Disable occupied lockers for deposits
+    if (status === "occupied" && btn.closest("#deposit-locker-grid")) {
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    }
+  });
+}
+
+// Start/stop status polling
+function startStatusPolling() {
+  if (statusPollingInterval) return;
+  fetchLockerStatus(); // Immediate fetch
+  statusPollingInterval = setInterval(fetchLockerStatus, 6000); // Every 6 seconds
+}
+
+function stopStatusPolling() {
+  if (statusPollingInterval) {
+    clearInterval(statusPollingInterval);
+    statusPollingInterval = null;
+  }
 }
 
 // Setup locker grid click handlers
@@ -131,10 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      if (btn.disabled || btn.classList.contains("occupied")) {
-        showToast("Casier occupé", "warning");
-        return;
-      }
+      if (btn.disabled) return;
       document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       selectedDepositLocker = parseInt(btn.dataset.locker);
@@ -146,16 +152,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      if (btn.disabled || btn.classList.contains("occupied")) {
-        showToast("Casier occupé", "warning");
-        return;
-      }
       document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       selectedWithdrawLocker = parseInt(btn.dataset.locker);
       document.getElementById("withdraw-locker").value = selectedWithdrawLocker;
     });
   });
+  
+  // Start status polling
+  startStatusPolling();
 });
 
 async function openDeposit() {
@@ -188,9 +193,6 @@ async function openDeposit() {
       showToast("Casier ouvert", "success");
       depositState = { lockerId, closetId: data.closetId, trackingCode };
       document.getElementById("deposit-close").classList.remove("hidden");
-      
-      // Refresh status after opening
-      checkLockerStatuses();
     } else {
       showToast(data.message || "Erreur", "error");
     }
@@ -222,9 +224,7 @@ async function closeDeposit() {
         showToast("Dépôt terminé", "success");
       }
       document.getElementById("deposit-close").classList.add("hidden");
-      
-      // Refresh status after closing
-      checkLockerStatuses();
+      depositState = null;
       
       setTimeout(() => {
         goHome();
@@ -236,6 +236,19 @@ async function closeDeposit() {
     showLoading(false);
     showToast("Erreur de connexion", "error");
   }
+}
+
+// Auto-close deposit when sensor detects closed door
+async function autoCloseDeposit() {
+  if (!depositState) return;
+  
+  // Check if already processing
+  if (document.getElementById("deposit-close").classList.contains("hidden")) {
+    return;
+  }
+  
+  // Auto-trigger close
+  await closeDeposit();
 }
 
 async function openWithdraw() {
@@ -268,9 +281,6 @@ async function openWithdraw() {
       showToast("Casier ouvert", "success");
       withdrawState = { lockerId, closetId: data.closetId };
       document.getElementById("withdraw-close").classList.remove("hidden");
-      
-      // Refresh status after opening
-      checkLockerStatuses();
     } else {
       showToast(data.message || "Mot de passe invalide", "error");
     }
@@ -298,9 +308,7 @@ async function closeWithdraw() {
     if (resp.ok) {
       showToast("Retrait terminé", "success");
       document.getElementById("withdraw-close").classList.add("hidden");
-      
-      // Refresh status after closing
-      checkLockerStatuses();
+      withdrawState = null;
       
       setTimeout(() => {
         goHome();
@@ -312,6 +320,19 @@ async function closeWithdraw() {
     showLoading(false);
     showToast("Erreur de connexion", "error");
   }
+}
+
+// Auto-close withdraw when sensor detects closed door
+async function autoCloseWithdraw() {
+  if (!withdrawState) return;
+  
+  // Check if already processing
+  if (document.getElementById("withdraw-close").classList.contains("hidden")) {
+    return;
+  }
+  
+  // Auto-trigger close
+  await closeWithdraw();
 }
 
 // Keyboard shortcuts

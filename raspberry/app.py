@@ -26,16 +26,45 @@ def ping():
 
 
 @app.route("/api/lockers/status", methods=["GET"])
-def get_lockers_status():
-    """Get status of all lockers (1-15)"""
-    # Get status from server
-    server_resp, status_code = api_client.get_locker_statuses()
-    
-    if status_code != 200:
-        # Return empty status if server unavailable
-        return jsonify({"lockers": {str(i): {"occupied": False, "available": True} for i in range(1, 16)}}), 200
-    
-    return jsonify(server_resp), status_code
+def lockers_status():
+    """Get combined status of all lockers from sensors and server."""
+    try:
+        # Get sensor status from Arduino
+        sensor_status = serial_ctrl.get_all_status()
+        
+        # Get occupation status from server
+        server_data, server_status_code = api_client.get_lockers_status()
+        
+        # Combine: sensor tells us if door is open/closed, server tells us if occupied
+        lockers = []
+        for locker_id in range(1, 16):  # Lockers 1-15
+            sensor_state = sensor_status.get(locker_id, "UNKNOWN")
+            
+            # Check if occupied from server
+            occupied = False
+            if server_status_code == 200 and "lockers" in server_data:
+                for locker in server_data["lockers"]:
+                    if locker.get("id") == locker_id and locker.get("occupied"):
+                        occupied = True
+                        break
+            
+            # Determine final status
+            if sensor_state == "OPEN":
+                status = "open"  # Door is physically open
+            elif occupied:
+                status = "occupied"  # Door closed but has package
+            else:
+                status = "available"  # Door closed and empty
+            
+            lockers.append({
+                "id": locker_id,
+                "status": status,
+                "sensorState": sensor_state
+            })
+        
+        return jsonify({"lockers": lockers})
+    except Exception as exc:
+        return jsonify({"message": f"Error getting status: {exc}"}), 500
 
 
 def _validate_locker(locker_id: int):

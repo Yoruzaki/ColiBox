@@ -61,4 +61,19 @@ class SerialController:
         resp = self._send_command(f"READ:{locker_id}")
         # Expecting response like "CLOSED" or "OPEN"
         return resp.upper() == "CLOSED"
+    
+    def get_all_status(self) -> dict:
+        """Get status of all lockers (1-15). Returns dict with locker_id: status."""
+        resp = self._send_command("STATUS")
+        # Expected format: "1:CLOSED,2:OPEN,3:CLOSED,..."
+        statuses = {}
+        if resp and resp.upper() != "OK":
+            for part in resp.split(","):
+                if ":" in part:
+                    try:
+                        locker_id, status = part.split(":")
+                        statuses[int(locker_id)] = status.upper()
+                    except ValueError:
+                        continue
+        return statuses
 
