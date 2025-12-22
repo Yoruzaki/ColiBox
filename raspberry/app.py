@@ -26,45 +26,39 @@ def ping():
 
 
 @app.route("/api/lockers/status", methods=["GET"])
-def lockers_status():
-    """Get combined status of all lockers from sensors and server."""
+def get_lockers_status():
+    """Get real-time status of all lockers from sensors and server"""
     try:
-        # Get sensor status from Arduino
-        sensor_status = serial_ctrl.get_all_status()
+        # Get physical status from Arduino sensors
+        sensor_statuses = serial_ctrl.get_all_statuses()
         
         # Get occupation status from server
-        server_data, server_status_code = api_client.get_lockers_status()
+        occupied_lockers, status_code = api_client.get_occupied_lockers()
+        occupied = set(occupied_lockers) if status_code == 200 else set()
         
-        # Combine: sensor tells us if door is open/closed, server tells us if occupied
+        # Combine both: sensor status + occupation
         lockers = []
-        for locker_id in range(1, 16):  # Lockers 1-15
-            sensor_state = sensor_status.get(locker_id, "UNKNOWN")
+        for locker_id in range(1, 16):
+            sensor_status = sensor_statuses.get(locker_id, "closed")
+            is_occupied = locker_id in occupied
             
-            # Check if occupied from server
-            occupied = False
-            if server_status_code == 200 and "lockers" in server_data:
-                for locker in server_data["lockers"]:
-                    if locker.get("id") == locker_id and locker.get("occupied"):
-                        occupied = True
-                        break
-            
-            # Determine final status
-            if sensor_state == "OPEN":
-                status = "open"  # Door is physically open
-            elif occupied:
-                status = "occupied"  # Door closed but has package
+            # Determine overall status
+            if sensor_status == "open":
+                status = "open"
+            elif is_occupied:
+                status = "occupied"
             else:
-                status = "available"  # Door closed and empty
+                status = "available"
             
             lockers.append({
                 "id": locker_id,
                 "status": status,
-                "sensorState": sensor_state
+                "sensor": sensor_status
             })
         
         return jsonify({"lockers": lockers})
     except Exception as exc:
-        return jsonify({"message": f"Error getting status: {exc}"}), 500
+        return jsonify({"message": str(exc)}), 500
 
 
 def _validate_locker(locker_id: int):

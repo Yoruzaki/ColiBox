@@ -2,8 +2,7 @@ let depositState = null;
 let withdrawState = null;
 let selectedDepositLocker = null;
 let selectedWithdrawLocker = null;
-let statusPollingInterval = null;
-let lockerStatuses = {};
+let statusPollInterval = null;
 
 function showLoading(show = true) {
   const overlay = document.getElementById("loading-overlay");
@@ -35,8 +34,8 @@ function showFlow(flow) {
     flowScreen.classList.remove("hidden");
     flowScreen.style.animation = "fadeIn 0.4s ease-out";
     
-    // Refresh status when entering a flow
-    fetchLockerStatus();
+    // Start status polling when entering flow screen
+    startStatusPolling();
   }, 300);
 }
 
@@ -45,6 +44,9 @@ function goHome() {
   withdrawState = null;
   selectedDepositLocker = null;
   selectedWithdrawLocker = null;
+  
+  // Stop status polling
+  stopStatusPolling();
   
   const currentScreen = document.querySelector(".screen:not(.hidden)");
   currentScreen.style.animation = "fadeOut 0.3s ease-out";
@@ -66,72 +68,66 @@ function goHome() {
   }, 300);
 }
 
-// Fetch locker statuses from server + sensors
-async function fetchLockerStatus() {
-  try {
-    const resp = await fetch("/api/lockers/status");
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.lockers) {
-        lockerStatuses = {};
-        data.lockers.forEach(locker => {
-          lockerStatuses[locker.id] = locker.status;
-        });
-        updateLockerGrid();
-        
-        // Auto-detect locker closure during deposit/withdraw
-        if (depositState && lockerStatuses[depositState.lockerId] === "occupied") {
-          // Locker was closed with package, auto-trigger close
-          autoCloseDeposit();
-        }
-        if (withdrawState && lockerStatuses[withdrawState.lockerId] === "available") {
-          // Locker was closed after withdrawal, auto-trigger close
-          autoCloseWithdraw();
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching locker status:", error);
+// Status polling
+function startStatusPolling() {
+  // Poll immediately
+  updateLockerStatuses();
+  
+  // Then poll every 10 seconds
+  if (statusPollInterval) {
+    clearInterval(statusPollInterval);
+  }
+  statusPollInterval = setInterval(updateLockerStatuses, 10000);
+}
+
+function stopStatusPolling() {
+  if (statusPollInterval) {
+    clearInterval(statusPollInterval);
+    statusPollInterval = null;
   }
 }
 
-// Update grid visual states
-function updateLockerGrid() {
-  document.querySelectorAll(".locker-btn").forEach(btn => {
-    const lockerId = parseInt(btn.dataset.locker);
-    const status = lockerStatuses[lockerId] || "available";
+async function updateLockerStatuses() {
+  try {
+    const resp = await fetch("/api/lockers/status");
+    if (!resp.ok) return;
+    
+    const data = await resp.json();
+    const lockers = data.lockers || [];
+    
+    // Update both grids
+    updateGridStatuses("deposit-locker-grid", lockers);
+    updateGridStatuses("withdraw-locker-grid", lockers);
+  } catch (error) {
+    console.error("Failed to update locker statuses:", error);
+  }
+}
+
+function updateGridStatuses(gridId, lockers) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  
+  lockers.forEach(locker => {
+    const btn = grid.querySelector(`[data-locker="${locker.id}"]`);
+    if (!btn) return;
     
     // Remove all status classes
     btn.classList.remove("status-available", "status-occupied", "status-open");
     
     // Add current status class
-    btn.classList.add(`status-${status}`);
+    btn.classList.add(`status-${locker.status}`);
     
-    // Disable occupied lockers for deposits
-    if (status === "occupied" && btn.closest("#deposit-locker-grid")) {
-      btn.disabled = true;
-      btn.style.opacity = "0.5";
-      btn.style.cursor = "not-allowed";
+    // Disable if occupied or open (but not if already selected)
+    if (locker.status === "occupied" || locker.status === "open") {
+      if (!btn.classList.contains("selected")) {
+        btn.disabled = true;
+        btn.style.cursor = "not-allowed";
+      }
     } else {
       btn.disabled = false;
-      btn.style.opacity = "1";
       btn.style.cursor = "pointer";
     }
   });
-}
-
-// Start/stop status polling
-function startStatusPolling() {
-  if (statusPollingInterval) return;
-  fetchLockerStatus(); // Immediate fetch
-  statusPollingInterval = setInterval(fetchLockerStatus, 6000); // Every 6 seconds
-}
-
-function stopStatusPolling() {
-  if (statusPollingInterval) {
-    clearInterval(statusPollingInterval);
-    statusPollingInterval = null;
-  }
 }
 
 // Setup locker grid click handlers
@@ -141,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       if (btn.disabled) return;
+      
       document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       selectedDepositLocker = parseInt(btn.dataset.locker);
@@ -152,15 +149,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
+      if (btn.disabled) return;
+      
       document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       selectedWithdrawLocker = parseInt(btn.dataset.locker);
       document.getElementById("withdraw-locker").value = selectedWithdrawLocker;
     });
   });
-  
-  // Start status polling
-  startStatusPolling();
 });
 
 async function openDeposit() {
@@ -193,6 +189,9 @@ async function openDeposit() {
       showToast("Casier ouvert", "success");
       depositState = { lockerId, closetId: data.closetId, trackingCode };
       document.getElementById("deposit-close").classList.remove("hidden");
+      
+      // Update status immediately
+      updateLockerStatuses();
     } else {
       showToast(data.message || "Erreur", "error");
     }
@@ -224,7 +223,9 @@ async function closeDeposit() {
         showToast("Dépôt terminé", "success");
       }
       document.getElementById("deposit-close").classList.add("hidden");
-      depositState = null;
+      
+      // Update status immediately
+      updateLockerStatuses();
       
       setTimeout(() => {
         goHome();
@@ -236,19 +237,6 @@ async function closeDeposit() {
     showLoading(false);
     showToast("Erreur de connexion", "error");
   }
-}
-
-// Auto-close deposit when sensor detects closed door
-async function autoCloseDeposit() {
-  if (!depositState) return;
-  
-  // Check if already processing
-  if (document.getElementById("deposit-close").classList.contains("hidden")) {
-    return;
-  }
-  
-  // Auto-trigger close
-  await closeDeposit();
 }
 
 async function openWithdraw() {
@@ -281,6 +269,9 @@ async function openWithdraw() {
       showToast("Casier ouvert", "success");
       withdrawState = { lockerId, closetId: data.closetId };
       document.getElementById("withdraw-close").classList.remove("hidden");
+      
+      // Update status immediately
+      updateLockerStatuses();
     } else {
       showToast(data.message || "Mot de passe invalide", "error");
     }
@@ -308,7 +299,9 @@ async function closeWithdraw() {
     if (resp.ok) {
       showToast("Retrait terminé", "success");
       document.getElementById("withdraw-close").classList.add("hidden");
-      withdrawState = null;
+      
+      // Update status immediately
+      updateLockerStatuses();
       
       setTimeout(() => {
         goHome();
@@ -320,19 +313,6 @@ async function closeWithdraw() {
     showLoading(false);
     showToast("Erreur de connexion", "error");
   }
-}
-
-// Auto-close withdraw when sensor detects closed door
-async function autoCloseWithdraw() {
-  if (!withdrawState) return;
-  
-  // Check if already processing
-  if (document.getElementById("withdraw-close").classList.contains("hidden")) {
-    return;
-  }
-  
-  // Auto-trigger close
-  await closeWithdraw();
 }
 
 // Keyboard shortcuts

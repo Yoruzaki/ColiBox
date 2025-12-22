@@ -62,18 +62,36 @@ class SerialController:
         # Expecting response like "CLOSED" or "OPEN"
         return resp.upper() == "CLOSED"
     
-    def get_all_status(self) -> dict:
-        """Get status of all lockers (1-15). Returns dict with locker_id: status."""
+    def get_all_statuses(self) -> dict:
+        """Get status of all lockers (1-15). Returns dict {locker_id: 'open'|'closed'}"""
         resp = self._send_command("STATUS")
-        # Expected format: "1:CLOSED,2:OPEN,3:CLOSED,..."
         statuses = {}
-        if resp and resp.upper() != "OK":
-            for part in resp.split(","):
-                if ":" in part:
-                    try:
-                        locker_id, status = part.split(":")
-                        statuses[int(locker_id)] = status.upper()
-                    except ValueError:
-                        continue
+        
+        if self._serial is None:
+            # Simulation mode - return all closed
+            for i in range(1, 16):
+                statuses[i] = "closed"
+            return statuses
+        
+        # Expected response: "STATUS:1:CLOSED,2:OPEN,3:CLOSED,..."
+        try:
+            if resp.startswith("STATUS:"):
+                resp = resp[7:]  # Remove "STATUS:" prefix
+            
+            pairs = resp.split(",")
+            for pair in pairs:
+                if ":" in pair:
+                    locker_id, status = pair.split(":", 1)
+                    locker_id = int(locker_id)
+                    if 1 <= locker_id <= 15:
+                        statuses[locker_id] = status.lower()
+        except Exception as exc:
+            LOG.error("Failed to parse status response: %s", exc)
+        
+        # Fill in any missing lockers as closed
+        for i in range(1, 16):
+            if i not in statuses:
+                statuses[i] = "closed"
+        
         return statuses
 

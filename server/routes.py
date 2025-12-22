@@ -49,35 +49,15 @@ def reset_locker(locker_id):
     return redirect(url_for("routes.index"))
 
 
-@bp.route("/api/lockers/status", methods=["GET"])
-def lockers_status():
-    """Return status of all lockers for real-time monitoring."""
+@bp.route("/api/lockers/occupied", methods=["GET"])
+def get_occupied_lockers():
+    """Return list of locker IDs that currently have orders"""
     db = _get_db()
-    lockers = db.execute("SELECT number, status FROM lockers WHERE number BETWEEN 1 AND 15 ORDER BY number").fetchall()
-    
-    lockers_data = []
-    for locker in lockers:
-        locker_id = locker["number"]
-        status = locker["status"]
-        
-        # Check if locker has active order (occupied)
-        order = db.execute(
-            "SELECT id, status FROM orders WHERE locker_id=? AND status IN ('awaiting_close', 'closed', 'withdraw_in_progress') ORDER BY created_at DESC LIMIT 1",
-            (locker_id,)
-        ).fetchone()
-        
-        # Determine if occupied
-        occupied = False
-        if order and order["status"] in ("awaiting_close", "closed"):
-            occupied = True
-        
-        lockers_data.append({
-            "id": locker_id,
-            "status": status,
-            "occupied": occupied
-        })
-    
-    return jsonify({"lockers": lockers_data})
+    lockers = db.execute(
+        "SELECT DISTINCT locker_id FROM orders WHERE status IN ('awaiting_close', 'closed')"
+    ).fetchall()
+    occupied = [row["locker_id"] for row in lockers]
+    return jsonify({"occupied": occupied})
 
 
 @bp.route("/api/deposit/open", methods=["POST"])

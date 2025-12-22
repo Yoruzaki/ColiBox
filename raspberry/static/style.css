@@ -312,7 +312,7 @@ label {
   transform: scale(1.05);
 }
 
-/* Locker status colors */
+/* Locker status indicators */
 .locker-btn.status-available {
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.4);
@@ -323,26 +323,28 @@ label {
   background: rgba(245, 158, 11, 0.2);
   border-color: rgba(245, 158, 11, 0.4);
   color: #f59e0b;
+  opacity: 0.6;
 }
 
 .locker-btn.status-open {
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
   color: #ef4444;
-  animation: pulse 2s ease-in-out infinite;
+  opacity: 0.6;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.locker-btn.status-available:not(.selected):active {
+  background: rgba(16, 185, 129, 0.3);
+  transform: scale(0.95);
 }
 
-/* Selected state overrides status colors */
-.locker-btn.selected {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
-  border-color: var(--primary) !important;
-  color: white !important;
-  animation: none !important;
+.locker-btn.selected.status-available,
+.locker-btn.selected.status-occupied,
+.locker-btn.selected.status-open {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: var(--primary);
+  color: white;
+  opacity: 1;
 }
 
 /* Info Box */
