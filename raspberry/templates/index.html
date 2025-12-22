@@ -5,7 +5,6 @@
     <div class="logo">ColiGoo</div>
   </div>
   <h1>Bienvenue</h1>
-  <p class="subtitle">Sélectionnez une opération</p>
   <div class="actions">
     <button class="btn-primary" onclick="showFlow('deposit')">
       <span class="btn-text">Déposer un colis</span>
@@ -18,24 +17,15 @@
 
 <section class="screen hidden" id="deposit-screen">
   <button class="back" onclick="goHome()">← Retour</button>
-  <div class="screen-header">
-    <h2>Déposer un colis</h2>
-    <p class="subtitle">Stockez votre colis en toute sécurité</p>
+  <h2 class="screen-title">Déposer un colis</h2>
+  
+  <div class="form-group">
+    <label for="deposit-tracking">Code de suivi</label>
+    <input id="deposit-tracking" class="input-field" placeholder="Entrez le code" autocomplete="off">
   </div>
   
   <div class="form-group">
-    <label for="deposit-tracking">
-      <span class="label-text">Code de suivi</span>
-      <span class="label-required">*</span>
-    </label>
-    <input id="deposit-tracking" class="input-field" placeholder="Entrez le code de suivi" autocomplete="off">
-  </div>
-  
-  <div class="form-group">
-    <label>
-      <span class="label-text">Sélectionnez un casier</span>
-      <span class="label-required">*</span>
-    </label>
+    <label>Casier</label>
     <div class="locker-grid" id="deposit-locker-grid">
       <button class="locker-btn" data-locker="1">1</button>
       <button class="locker-btn" data-locker="2">2</button>
@@ -56,13 +46,11 @@
     <input type="hidden" id="deposit-locker" value="">
   </div>
   
-  <button class="btn-action" onclick="openDeposit()">
-    <span class="btn-text">Ouvrir le casier</span>
-  </button>
+  <button class="btn-action" onclick="openDeposit()">Ouvrir</button>
   
   <div class="hidden close-section" id="deposit-close">
     <div class="info-box">
-      <p class="info-text">Placez votre colis à l'intérieur et fermez la porte</p>
+      <p class="info-text">Placez votre colis et fermez la porte</p>
       <button class="btn-confirm" onclick="closeDeposit()">Confirmer</button>
     </div>
   </div>
@@ -70,24 +58,15 @@
 
 <section class="screen hidden" id="withdraw-screen">
   <button class="back" onclick="goHome()">← Retour</button>
-  <div class="screen-header">
-    <h2>Retirer un colis</h2>
-    <p class="subtitle">Récupérez votre colis</p>
+  <h2 class="screen-title">Retirer un colis</h2>
+  
+  <div class="form-group">
+    <label for="withdraw-password">Mot de passe</label>
+    <input id="withdraw-password" class="input-field" type="password" placeholder="Entrez le mot de passe" autocomplete="off">
   </div>
   
   <div class="form-group">
-    <label for="withdraw-password">
-      <span class="label-text">Mot de passe</span>
-      <span class="label-required">*</span>
-    </label>
-    <input id="withdraw-password" class="input-field" type="password" placeholder="Entrez votre mot de passe" autocomplete="off">
-  </div>
-  
-  <div class="form-group">
-    <label>
-      <span class="label-text">Sélectionnez un casier</span>
-      <span class="label-required">*</span>
-    </label>
+    <label>Casier</label>
     <div class="locker-grid" id="withdraw-locker-grid">
       <button class="locker-btn" data-locker="1">1</button>
       <button class="locker-btn" data-locker="2">2</button>
@@ -108,9 +87,7 @@
     <input type="hidden" id="withdraw-locker" value="">
   </div>
   
-  <button class="btn-action" onclick="openWithdraw()">
-    <span class="btn-text">Ouvrir le casier</span>
-  </button>
+  <button class="btn-action" onclick="openWithdraw()">Ouvrir</button>
   
   <div class="hidden close-section" id="withdraw-close">
     <div class="info-box">
@@ -124,6 +101,6 @@
 
 <div id="loading-overlay" class="loading-overlay hidden">
   <div class="spinner"></div>
-  <p class="loading-text">Traitement en cours...</p>
+  <p class="loading-text">Traitement...</p>
 </div>
 {% endblock %}
