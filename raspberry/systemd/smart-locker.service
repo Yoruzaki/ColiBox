@@ -7,7 +7,7 @@ Wants=network-online.target
 User=pi
 WorkingDirectory=/home/pi/smart-locker/ColiBox/raspberry
 Environment="SERVER_BASE_URL=http://192.168.196.130:5000"
-ExecStart=/usr/bin/python3 /home/pi/smart-locker/ColiBox/raspberry/app.py
+ExecStart=/home/pi/smart-locker/ColiBox/raspberry/.venv/bin/python /home/pi/smart-locker/ColiBox/raspberry/app.py
 Restart=always
 RestartSec=5
 
