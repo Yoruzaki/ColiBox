@@ -25,6 +25,19 @@ def ping():
     return jsonify({"status": "ok"})
 
 
+@app.route("/api/lockers/status", methods=["GET"])
+def get_lockers_status():
+    """Get status of all lockers (1-15)"""
+    # Get status from server
+    server_resp, status_code = api_client.get_locker_statuses()
+    
+    if status_code != 200:
+        # Return empty status if server unavailable
+        return jsonify({"lockers": {str(i): {"occupied": False, "available": True} for i in range(1, 16)}}), 200
+    
+    return jsonify(server_resp), status_code
+
+
 def _validate_locker(locker_id: int):
     if locker_id == 16:
         return False, ("Locker 16 is reserved", 400)
