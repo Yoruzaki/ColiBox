@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 {% block content %}
 <section>
-  <h2>Lockers</h2>
+  <h2>Boxes Status</h2>
   <div class="grid">
-    {% for locker in lockers %}
+    {% for box in boxes %}
       <div class="card">
-        <div>Locker {{ locker["number"] }}</div>
-        <div class="status {{ locker['status'] }}">{{ locker["status"] }}</div>
-        {% if locker["number"] <= 15 %}
-        <form method="post" action="{{ url_for('routes.reset_locker', locker_id=locker['number']) }}">
+        <div><strong>Machine {{ box["machine_id"] }}</strong> - Box {{ box["box_number"] }}</div>
+        <div class="status {{ box['status'] }}">{{ box["status"] }}</div>
+        {% if box["box_number"] <= 15 %}
+        <form method="post" action="{{ url_for('routes.reset_box', box_id=box['id']) }}">
           <button type="submit">Reset</button>
         </form>
         {% else %}
@@ -25,7 +25,8 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Locker</th>
+        <th>Machine</th>
+        <th>Box</th>
         <th>Closet</th>
         <th>Type</th>
         <th>Status</th>
@@ -38,7 +39,8 @@
       {% for order in orders %}
         <tr>
           <td>{{ order["id"] }}</td>
-          <td>{{ order["locker_id"] }}</td>
+          <td>{{ order["machine_id"] }}</td>
+          <td>{{ order["box_number"] }}</td>
           <td>{{ order["closet_id"] }}</td>
           <td>{{ order["order_type"] }}</td>
           <td>{{ order["status"] }}</td>
@@ -50,5 +52,11 @@
     </tbody>
   </table>
 </section>
-{% endblock %}
 
+<style>
+  .status.available { color: #10b981; }
+  .status.deposit_open { color: #f59e0b; }
+  .status.occupied { color: #ef4444; }
+  .status.withdraw_open { color: #3b82f6; }
+</style>
+{% endblock %}
