@@ -7,10 +7,10 @@
   <h1>Bienvenue</h1>
   <div class="actions">
     <button class="btn-primary" onclick="showFlow('deposit')">
-      <span class="btn-text">Déposer un colis</span>
+      Déposer un colis
     </button>
     <button class="btn-primary" onclick="showFlow('withdraw')">
-      <span class="btn-text">Retirer un colis</span>
+      Retirer un colis
     </button>
   </div>
 </section>
@@ -20,38 +20,38 @@
   <h2 class="screen-title">Déposer un colis</h2>
   
   <div class="form-group">
-    <label for="deposit-tracking">Code de suivi</label>
-    <input id="deposit-tracking" class="input-field" placeholder="Entrez le code" autocomplete="off">
+    <label>Code de suivi</label>
+    <input id="deposit-tracking" class="input-field" readonly placeholder="Utilisez le clavier" value="">
   </div>
   
-  <div class="form-group">
-    <label>Casier</label>
-    <div class="locker-grid" id="deposit-locker-grid">
-      <button class="locker-btn" data-locker="1">1</button>
-      <button class="locker-btn" data-locker="2">2</button>
-      <button class="locker-btn" data-locker="3">3</button>
-      <button class="locker-btn" data-locker="4">4</button>
-      <button class="locker-btn" data-locker="5">5</button>
-      <button class="locker-btn" data-locker="6">6</button>
-      <button class="locker-btn" data-locker="7">7</button>
-      <button class="locker-btn" data-locker="8">8</button>
-      <button class="locker-btn" data-locker="9">9</button>
-      <button class="locker-btn" data-locker="10">10</button>
-      <button class="locker-btn" data-locker="11">11</button>
-      <button class="locker-btn" data-locker="12">12</button>
-      <button class="locker-btn" data-locker="13">13</button>
-      <button class="locker-btn" data-locker="14">14</button>
-      <button class="locker-btn" data-locker="15">15</button>
-    </div>
-    <input type="hidden" id="deposit-locker" value="">
+  <div class="keypad" id="deposit-keypad">
+    <button class="key" onclick="keypadInput('deposit', '1')">1</button>
+    <button class="key" onclick="keypadInput('deposit', '2')">2</button>
+    <button class="key" onclick="keypadInput('deposit', '3')">3</button>
+    <button class="key" onclick="keypadInput('deposit', '4')">4</button>
+    <button class="key" onclick="keypadInput('deposit', '5')">5</button>
+    <button class="key" onclick="keypadInput('deposit', '6')">6</button>
+    <button class="key" onclick="keypadInput('deposit', '7')">7</button>
+    <button class="key" onclick="keypadInput('deposit', '8')">8</button>
+    <button class="key" onclick="keypadInput('deposit', '9')">9</button>
+    <button class="key key-clear" onclick="keypadClear('deposit')">⌫</button>
+    <button class="key" onclick="keypadInput('deposit', '0')">0</button>
+    <button class="key key-ok" onclick="openDeposit()">✓</button>
   </div>
-  
-  <button class="btn-action" onclick="openDeposit()">Ouvrir</button>
   
   <div class="hidden close-section" id="deposit-close">
-    <div class="info-box">
-      <p class="info-text">Placez votre colis et fermez la porte</p>
-      <button class="btn-confirm" onclick="closeDeposit()">Confirmer</button>
+    <div class="box-display">
+      <div class="box-number" id="deposit-box-number"></div>
+      <p class="box-instruction">Placez votre colis dans cette box et fermez la porte</p>
+    </div>
+    <button class="btn-confirm" onclick="closeDeposit()">Confirmer</button>
+  </div>
+  
+  <div class="hidden" id="deposit-password-display">
+    <div class="password-box">
+      <p class="password-label">Votre mot de passe:</p>
+      <div class="password-value" id="deposit-password"></div>
+      <p class="password-warning">⚠️ Notez ce mot de passe pour récupérer votre colis</p>
     </div>
   </div>
 </section>
@@ -61,39 +61,31 @@
   <h2 class="screen-title">Retirer un colis</h2>
   
   <div class="form-group">
-    <label for="withdraw-password">Mot de passe</label>
-    <input id="withdraw-password" class="input-field" type="password" placeholder="Entrez le mot de passe" autocomplete="off">
+    <label>Mot de passe</label>
+    <input id="withdraw-password" class="input-field" type="password" readonly placeholder="Utilisez le clavier" value="">
   </div>
   
-  <div class="form-group">
-    <label>Casier</label>
-    <div class="locker-grid" id="withdraw-locker-grid">
-      <button class="locker-btn" data-locker="1">1</button>
-      <button class="locker-btn" data-locker="2">2</button>
-      <button class="locker-btn" data-locker="3">3</button>
-      <button class="locker-btn" data-locker="4">4</button>
-      <button class="locker-btn" data-locker="5">5</button>
-      <button class="locker-btn" data-locker="6">6</button>
-      <button class="locker-btn" data-locker="7">7</button>
-      <button class="locker-btn" data-locker="8">8</button>
-      <button class="locker-btn" data-locker="9">9</button>
-      <button class="locker-btn" data-locker="10">10</button>
-      <button class="locker-btn" data-locker="11">11</button>
-      <button class="locker-btn" data-locker="12">12</button>
-      <button class="locker-btn" data-locker="13">13</button>
-      <button class="locker-btn" data-locker="14">14</button>
-      <button class="locker-btn" data-locker="15">15</button>
-    </div>
-    <input type="hidden" id="withdraw-locker" value="">
+  <div class="keypad" id="withdraw-keypad">
+    <button class="key" onclick="keypadInput('withdraw', '1')">1</button>
+    <button class="key" onclick="keypadInput('withdraw', '2')">2</button>
+    <button class="key" onclick="keypadInput('withdraw', '3')">3</button>
+    <button class="key" onclick="keypadInput('withdraw', '4')">4</button>
+    <button class="key" onclick="keypadInput('withdraw', '5')">5</button>
+    <button class="key" onclick="keypadInput('withdraw', '6')">6</button>
+    <button class="key" onclick="keypadInput('withdraw', '7')">7</button>
+    <button class="key" onclick="keypadInput('withdraw', '8')">8</button>
+    <button class="key" onclick="keypadInput('withdraw', '9')">9</button>
+    <button class="key key-clear" onclick="keypadClear('withdraw')">⌫</button>
+    <button class="key" onclick="keypadInput('withdraw', '0')">0</button>
+    <button class="key key-ok" onclick="openWithdraw()">✓</button>
   </div>
-  
-  <button class="btn-action" onclick="openWithdraw()">Ouvrir</button>
   
   <div class="hidden close-section" id="withdraw-close">
-    <div class="info-box">
-      <p class="info-text">Retirez votre colis et fermez la porte</p>
-      <button class="btn-confirm" onclick="closeWithdraw()">Confirmer</button>
+    <div class="box-display">
+      <div class="box-number" id="withdraw-box-number"></div>
+      <p class="box-instruction">Retirez votre colis et fermez la porte</p>
     </div>
+    <button class="btn-confirm" onclick="closeWithdraw()">Confirmer</button>
   </div>
 </section>
 

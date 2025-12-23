@@ -1,7 +1,5 @@
 let depositState = null;
 let withdrawState = null;
-let selectedDepositLocker = null;
-let selectedWithdrawLocker = null;
 
 function showLoading(show = true) {
   const overlay = document.getElementById("loading-overlay");
@@ -38,8 +36,6 @@ function showFlow(flow) {
 function goHome() {
   depositState = null;
   withdrawState = null;
-  selectedDepositLocker = null;
-  selectedWithdrawLocker = null;
   
   const currentScreen = document.querySelector(".screen:not(.hidden)");
   currentScreen.style.animation = "fadeOut 0.3s ease-out";
@@ -52,70 +48,66 @@ function goHome() {
     
     // Reset forms
     document.getElementById("deposit-tracking").value = "";
-    document.getElementById("deposit-locker").value = "";
     document.getElementById("withdraw-password").value = "";
-    document.getElementById("withdraw-locker").value = "";
-    document.querySelectorAll(".locker-btn").forEach(btn => btn.classList.remove("selected"));
     document.getElementById("deposit-close").classList.add("hidden");
     document.getElementById("withdraw-close").classList.add("hidden");
+    document.getElementById("deposit-password-display").classList.add("hidden");
   }, 300);
 }
 
-// Setup locker grid click handlers
-document.addEventListener("DOMContentLoaded", () => {
-  // Deposit locker grid
-  document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll("#deposit-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selectedDepositLocker = parseInt(btn.dataset.locker);
-      document.getElementById("deposit-locker").value = selectedDepositLocker;
-    });
-  });
-  
-  // Withdraw locker grid
-  document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll("#withdraw-locker-grid .locker-btn").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selectedWithdrawLocker = parseInt(btn.dataset.locker);
-      document.getElementById("withdraw-locker").value = selectedWithdrawLocker;
-    });
-  });
-});
+// Keypad functions
+function keypadInput(type, digit) {
+  const inputId = type === 'deposit' ? 'deposit-tracking' : 'withdraw-password';
+  const input = document.getElementById(inputId);
+  input.value += digit;
+}
+
+function keypadClear(type) {
+  const inputId = type === 'deposit' ? 'deposit-tracking' : 'withdraw-password';
+  const input = document.getElementById(inputId);
+  input.value = input.value.slice(0, -1);
+}
 
 async function openDeposit() {
   const trackingCode = document.getElementById("deposit-tracking").value.trim();
-  const lockerId = selectedDepositLocker;
   
   if (!trackingCode) {
     showToast("Entrez le code de suivi", "warning");
     return;
   }
   
-  if (!lockerId || lockerId < 1 || lockerId > 15) {
-    showToast("Sélectionnez un casier", "warning");
-    return;
-  }
-  
   showLoading(true);
   
   try {
+    // Le client envoie seulement le code de suivi
+    // Le serveur décide quelle box utiliser
     const resp = await fetch("/api/deposit/open", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ trackingCode, lockerId }),
+      body: JSON.stringify({ trackingCode }),
     });
     
     const data = await resp.json();
     showLoading(false);
     
     if (resp.ok) {
-      showToast("Casier ouvert", "success");
-      depositState = { lockerId, closetId: data.closetId, trackingCode };
+      // Le serveur retourne boxId (la box assignée)
+      const boxId = data.boxId || data.lockerId; // fallback pour compatibilité
+      const closetId = data.closetId;
+      
+      if (!boxId) {
+        showToast("Erreur: boxId manquant", "error");
+        return;
+      }
+      
+      showToast("Box ouverte", "success");
+      
+      // Afficher le numéro de box
+      document.getElementById("deposit-box-number").textContent = `Box ${boxId}`;
       document.getElementById("deposit-close").classList.remove("hidden");
+      
+      // Sauvegarder l'état
+      depositState = { boxId, closetId, trackingCode };
     } else {
       showToast(data.message || "Erreur", "error");
     }
@@ -141,16 +133,23 @@ async function closeDeposit() {
     showLoading(false);
     
     if (resp.ok) {
+      // Le serveur génère et retourne le mot de passe
       if (data.password) {
-        showToast(`Mot de passe: ${data.password}`, "success");
+        document.getElementById("deposit-password").textContent = data.password;
+        document.getElementById("deposit-password-display").classList.remove("hidden");
+        document.getElementById("deposit-close").classList.add("hidden");
+        showToast("Dépôt réussi", "success");
+        
+        // Retourner automatiquement après affichage du mot de passe
+        setTimeout(() => {
+          goHome();
+        }, 8000);
       } else {
         showToast("Dépôt terminé", "success");
+        setTimeout(() => {
+          goHome();
+        }, 3000);
       }
-      document.getElementById("deposit-close").classList.add("hidden");
-      
-      setTimeout(() => {
-        goHome();
-      }, 4000);
     } else {
       showToast(data.message || "Erreur", "error");
     }
@@ -162,34 +161,44 @@ async function closeDeposit() {
 
 async function openWithdraw() {
   const password = document.getElementById("withdraw-password").value.trim();
-  const lockerId = selectedWithdrawLocker;
   
   if (!password) {
     showToast("Entrez le mot de passe", "warning");
     return;
   }
   
-  if (!lockerId || lockerId < 1 || lockerId > 15) {
-    showToast("Sélectionnez un casier", "warning");
-    return;
-  }
-  
   showLoading(true);
   
   try {
+    // Le client envoie seulement le mot de passe
+    // Le serveur trouve la box correspondante
     const resp = await fetch("/api/withdraw/open", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password, lockerId }),
+      body: JSON.stringify({ password }),
     });
     
     const data = await resp.json();
     showLoading(false);
     
     if (resp.ok) {
-      showToast("Casier ouvert", "success");
-      withdrawState = { lockerId, closetId: data.closetId };
+      // Le serveur retourne boxId (la box contenant le colis)
+      const boxId = data.boxId || data.lockerId; // fallback pour compatibilité
+      const closetId = data.closetId;
+      
+      if (!boxId) {
+        showToast("Erreur: boxId manquant", "error");
+        return;
+      }
+      
+      showToast("Box ouverte", "success");
+      
+      // Afficher le numéro de box
+      document.getElementById("withdraw-box-number").textContent = `Box ${boxId}`;
       document.getElementById("withdraw-close").classList.remove("hidden");
+      
+      // Sauvegarder l'état
+      withdrawState = { boxId, closetId };
     } else {
       showToast(data.message || "Mot de passe invalide", "error");
     }
