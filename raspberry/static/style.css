@@ -204,22 +204,22 @@ label { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; font-weight: 
 }
 
 .key {
-  aspect-ratio: 1.4;
+  aspect-ratio: 1.5;
   background: rgba(51, 65, 85, 0.7);
   border: 1px solid rgba(71, 85, 105, 0.5);
   color: var(--text-primary);
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
+  min-height: 42px;
 }
 
-.key:active { background: var(--bg-card-light); }
-.key-clear { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-.key-ok { background: var(--success); color: white; font-size: 1.2rem; }
+.key:active { background: rgba(99, 102, 241, 0.4); transform: scale(0.96); }
+.key-clear { background: rgba(239, 68, 68, 0.2); color: #fca5a5; font-size: 1.6rem; }
+.key-ok { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); color: white; font-size: 1.8rem; }
 
 /* Box Display */
 .box-display {
