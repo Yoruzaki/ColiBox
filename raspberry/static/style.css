@@ -120,7 +120,13 @@ h1 {
 }
 
 /* Buttons */
-.actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.8rem; }
+.actions { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
+
+#home-screen .btn-primary {
+  padding: 1.5rem 2rem;
+  font-size: 1.3rem;
+  border-radius: 16px;
+}
 
 .btn-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
